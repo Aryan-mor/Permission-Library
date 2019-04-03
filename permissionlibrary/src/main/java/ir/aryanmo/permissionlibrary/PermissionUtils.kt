@@ -11,7 +11,7 @@ import android.util.Log
 
 
 private const val PREFS_FILE_NAME = "PermissionLibrarySharedPreference"
-const val DEFAULT_REQUEST_CODE = 8075
+const val PERMISSION_DEFAULT_REQUEST_CODE = 8075
 
 fun shouldAskPermission(): Boolean {
     return Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
@@ -35,51 +35,72 @@ fun hasPermission(context: Context, manifestPermission: String): Boolean {
 }
 
 @SuppressLint("NewApi")
-fun checkPermission(activity: Activity, permission: String, listener: PermissionAskListener) {
+fun checkPermission(activity: Activity, permissions: List<String>, listener: PermissionAskListener) {
+
+    if (permissions.isEmpty()) {
+        return
+    }
+    val permission = permissions[0]
+    val perList = permissions as ArrayList<String>
+    perList.removeAt(0)
     /*
      * If permission is not granted
      * */
-
     if (shouldAskPermission(activity, permission)) {
         /*
          * If permission denied previously
          * */
         if (activity.shouldShowRequestPermissionRationale(permission)) {
-            listener.onNeedPermission()
+            listener.onNeedPermission(permission)
         } else {
             /*
              * Permission denied or first time requested
              * */
             if (isFirstTimeAskingPermission(activity, permission)) {
                 firstTimeAskingPermission(activity, permission, false)
-                listener.onNeedPermission()
+                listener.onNeedPermission(permission)
             } else {
                 /*
                  * Handle the feature without permission or ask user to manually allow permission
                  * */
-                listener.onPermissionDisabled()
+                listener.onPermissionDisabled(permission)
             }
         }
     } else {
-        listener.onPermissionGranted()
+        listener.onPermissionGranted(permission)
+        checkPermission(activity, perList, listener)
     }
 }
 
 @SuppressLint("NewApi")
-fun checkPermission(activity: Activity, permission: String, permissionGranted: () -> Unit) {
-    checkPermission(activity, permission, object : PermissionAskListener {
-        override fun onNeedPermission() {
-            requestPermission(activity, permission, DEFAULT_REQUEST_CODE)
+fun checkPermission(activity: Activity, permission: String, listener: PermissionAskListener) {
+    val permissions = ArrayList<String>()
+    permissions.add(permission)
+    checkPermission(activity, permissions, listener)
+}
+
+@SuppressLint("NewApi")
+fun checkPermission(activity: Activity, permissions: List<String>, permissionGranted: (permission: String) -> Unit) {
+    checkPermission(activity, permissions, object : PermissionAskListener {
+        override fun onNeedPermission(permission: String) {
+            requestPermission(activity, permission, PERMISSION_DEFAULT_REQUEST_CODE)
         }
 
-        override fun onPermissionDisabled() {
+        override fun onPermissionDisabled(permission: String) {
             getPermissionDisableDialog(activity).show()
         }
 
-        override fun onPermissionGranted() {
-            permissionGranted()
+        override fun onPermissionGranted(permission: String) {
+            permissionGranted(permission)
         }
     })
+}
+
+@SuppressLint("NewApi")
+fun checkPermission(activity: Activity, permission: String, permissionGranted: (permission: String) -> Unit) {
+    val permissions = ArrayList<String>()
+    permissions.add(permission)
+    checkPermission(activity, permissions, permissionGranted)
 }
 
 private fun firstTimeAskingPermission(context: Context, permission: String, isFirstTime: Boolean) {
@@ -95,16 +116,16 @@ interface PermissionAskListener {
     /*
      * Callback to ask permission
      * */
-    fun onNeedPermission()
+    fun onNeedPermission(permission: String)
 
     /*
      * Callback on permission "Never show again" checked and denied
      * */
-    fun onPermissionDisabled()
+    fun onPermissionDisabled(permission: String)
 
     /*
      * Callback on permission granted
      * */
-    fun onPermissionGranted()
+    fun onPermissionGranted(permission: String)
 }
 

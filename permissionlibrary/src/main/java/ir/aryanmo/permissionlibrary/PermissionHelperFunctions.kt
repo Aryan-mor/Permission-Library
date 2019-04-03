@@ -42,7 +42,7 @@ fun getPermissionDisableDialog(
     activity: Activity,
     title: String? = "Permission Denied",
     message: String? = "Do you want to provide the permission access?",
-    positiveButtonText: String? = "Accept",
+    positiveButtonText: String? = "Go To Setting",
     negativeButtonText: String? = "Cancel"
 ): AlertDialog.Builder {
     val dialog = AlertDialog.Builder(activity)
