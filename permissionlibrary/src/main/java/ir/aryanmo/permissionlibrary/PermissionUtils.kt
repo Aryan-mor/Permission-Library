@@ -7,10 +7,11 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.support.v4.app.ActivityCompat
 import android.support.v4.content.ContextCompat
+import android.util.Log
 
 
 private const val PREFS_FILE_NAME = "PermissionLibrarySharedPreference"
-const val DEFAULT_REQUEST_CODE = 1856423
+const val DEFAULT_REQUEST_CODE = 8075
 
 fun shouldAskPermission(): Boolean {
     return Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
@@ -38,6 +39,7 @@ fun checkPermission(activity: Activity, permission: String, listener: Permission
     /*
      * If permission is not granted
      * */
+
     if (shouldAskPermission(activity, permission)) {
         /*
          * If permission denied previously
@@ -67,7 +69,7 @@ fun checkPermission(activity: Activity, permission: String, listener: Permission
 fun checkPermission(activity: Activity, permission: String, permissionGranted: () -> Unit) {
     checkPermission(activity, permission, object : PermissionAskListener {
         override fun onNeedPermission() {
-            requestPermission(activity,permission, DEFAULT_REQUEST_CODE)
+            requestPermission(activity, permission, DEFAULT_REQUEST_CODE)
         }
 
         override fun onPermissionDisabled() {
